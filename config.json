@@ -3,7 +3,7 @@
 "nightRate": 60000,
 "dayStart": "08:00",
 "dayEnd": "18:00",
-"minMinutes": 60
+"minMinutes": 60,
   "cards": {
     "1": "11111",
     "2": "22222",
