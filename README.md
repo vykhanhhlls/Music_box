@@ -1,78 +1,72 @@
-# Music Box - Hệ thống Quản lý Phòng
+# Hướng dẫn liên kết Google Sheet với Music Box
 
-Web app quản lý phòng Music Box.
+## Bước 1: Tạo Google Sheet
 
-## File quan trọng
+1. Vào https://sheets.google.com → **Blank spreadsheet**
+2. Đặt tên sheet (ví dụ: `MusicBox Data`)
+3. Tạo 3 sheet (tab phía dưới):
+   - `Rooms`
+   - `Bookings`
+   - `Invoices`  
+   (Script sẽ tự tạo header nếu chưa có)
 
-| File | Mục đích |
-|------|----------|
-| `index.html` | Giao diện chính |
-| `config.json` | **Cấu hình chính** – giá giờ, mã thẻ từng phòng, danh sách món |
+## Bước 2: Cài Apps Script
 
-## Cách sửa cấu hình (config.json)
+1. Trong Google Sheet: **Extensions → Apps Script**
+2. Xóa hết code mặc định
+3. Mở file `GoogleAppsScript.js` (trong thư mục dự án) → **Copy toàn bộ** → Dán vào Apps Script
+4. Bấm **Save** (Ctrl+S), đặt tên project tùy ý
 
-Mở file `config.json` bằng Notepad / VS Code:
+## Bước 3: Deploy Web App
+
+1. Trong Apps Script: **Deploy → New deployment**
+2. Bấm biểu tượng bánh răng → chọn **Web app**
+3. Cấu hình:
+   - **Description**: Music Box API
+   - **Execute as**: Me
+   - **Who has access**: **Anyone**
+4. Bấm **Deploy**
+5. Lần đầu sẽ hỏi quyền → **Authorize access** → chọn tài khoản Google → Advanced → Go to ... → Allow
+6. **Copy URL** (dạng):
+   ```
+   https://script.google.com/macros/s/AKfycbxxxxxxx/exec
+   ```
+
+## Bước 4: Dán URL vào config.json
+
+Mở file `config.json`, sửa dòng:
 
 ```json
-{
-  "ratePerHour": 100000,          // Giá mỗi giờ (VND) – ĐỔI TẠI ĐÂY
-  "minMinutes": 60,               // Làm tròn tối thiểu (phút)
-  "cards": {                      // Mã thẻ cố định từng BOX
-    "1": "11111",
-    "2": "22222",
-    "3": "33333",
-    "4": "44444",
-    "5": "55555",
-    "6": "66666"
-  },
-  "menu": [                       // Thêm / bớt / sửa món tại đây
-    { "id": "cam", "name": "Nước cam ép", "price": 25000 },
-    { "id": "dau", "name": "Sữa đậu", "price": 10000 },
-    { "id": "ngo", "name": "Sữa ngô", "price": 20000 },
-    { "id": "chanh", "name": "Trà chanh", "price": 10000 },
-    { "id": "quat", "name": "Trà quất", "price": 10000 },
-    { "id": "dao", "name": "Trà đào", "price": 15000 }
-  ]
-}
+"sheetApiUrl": "https://script.google.com/macros/s/AKfycbxxxxxxx/exec"
 ```
 
-### Thêm món mới
-```json
-{ "id": "coca", "name": "Coca Cola", "price": 15000 }
-```
-Thêm vào mảng `menu`, lưu file, **tải lại trang**.
+Lưu file → **tải lại trang web**.
 
-### Đổi mã thẻ
-Sửa số trong `"cards"`, ví dụ BOX 1 dùng thẻ `99999`:
-```json
-"1": "99999"
-```
+Khi thấy dòng trạng thái có **Google Sheet: ON** là đã kết nối.
 
-### Đổi giá giờ mặc định
-Sửa `"ratePerHour": 80000` (ví dụ 80.000đ/giờ).
+## Bước 5: Kiểm tra
 
----
+- Vào **Cài đặt** → bấm **Đồng bộ lên Sheet** hoặc **Tải từ Sheet**
+- Hoặc thao tác bình thường (quẹt thẻ, đặt phòng, thanh toán) → dữ liệu tự gửi lên Sheet
 
-## Cách hoạt động quẹt thẻ
+## Dữ liệu được lưu
 
-- Mỗi BOX có **1 mã thẻ cố định** (định nghĩa trong `config.json`).
-- Quẹt thẻ `11111` → vào/ra **BOX 1**.
-- Quẹt thẻ `22222` → vào/ra **BOX 2**.
-- ...
-- Phòng trống → quẹt thẻ → chuyển **đỏ** + hiện mã thẻ trên ô.
-- Phòng đang đỏ → quẹt lại cùng thẻ → mở màn hình **Thanh toán**.
+| Sheet | Nội dung |
+|-------|----------|
+| **Rooms** | Trạng thái 6 phòng, mã thẻ, giờ vào, món đã gọi |
+| **Bookings** | Lịch đặt phòng |
+| **Invoices** | Mỗi lần thanh toán: thời gian, tiền phòng (ban ngày/đêm), món, tổng tiền |
 
-## Deploy GitHub Pages
+## Lưu ý quan trọng
 
-1. Tạo repo mới trên GitHub.
-2. Upload cả 2 file: `index.html` + `config.json`.
-3. Settings → Pages → Source: branch `main`.
-4. Truy cập `https://username.github.io/tên-repo/`.
+- App vẫn lưu **localStorage** trước. Google Sheet là bản sao / backup / báo cáo.
+- Nếu nhiều máy dùng chung 1 Sheet: nên bấm **Tải từ Sheet** khi mở app để lấy trạng thái mới nhất.
+- URL Web App phải để **Anyone**, nếu không trình duyệt không gọi được.
+- Khi sửa code Apps Script → Deploy lại (Manage deployments → Edit → New version).
 
-## Liên kết Google Sheet
+## Gỡ lỗi
 
-Có thể dùng Google Apps Script làm backend. Nếu cần code sẵn, hãy yêu cầu.
+- Mở F12 → tab Console xem log lỗi.
+- Thử mở URL `...?action=ping` trên trình duyệt, phải thấy `{"ok":true,...}`.
+- Nếu CORS lỗi: Script đã dùng `mode: 'no-cors'` cho POST (không đọc được response nhưng dữ liệu vẫn được ghi).
 
----
-
-Phát triển bởi Grok • 2026
