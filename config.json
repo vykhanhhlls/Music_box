@@ -3,7 +3,7 @@
   "nightRate": 60000,
   "dayStart": "08:00",
   "dayEnd": "18:00",
-  "minMinutes": 59,
+  "minMinutes": 60,
   "sheetApiUrl": "https://script.google.com/macros/s/AKfycbx5SejW7pQyS92EOeEqEuKsFqDg2yb3We608Y7LHBblixweLp1-a-80jBnr5naQYZgwYg/exec",
   "cards": {
     "1": "11111",
