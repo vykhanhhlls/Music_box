@@ -14,11 +14,11 @@
     "6": "66666"
   },
   "menu": [
-    { "id": "cam", "name": "Nước cam ép", "price": 25000 },
-    { "id": "dau", "name": "Sữa đậu", "price": 10000 },
-    { "id": "ngo", "name": "Sữa ngô", "price": 20000 },
-    { "id": "chanh", "name": "Trà chanh", "price": 10000 },
-    { "id": "quat", "name": "Trà quất", "price": 10000 },
-    { "id": "dao", "name": "Trà đào", "price": 15000 }
+    { "id": "cam", "code": "10001", "name": "Nước cam ép", "price": 25000 },
+    { "id": "dau", "code": "10002", "name": "Sữa đậu", "price": 10000 },
+    { "id": "ngo", "code": "10003", "name": "Sữa ngô", "price": 20000 },
+    { "id": "chanh", "code": "10004", "name": "Trà chanh", "price": 10000 },
+    { "id": "quat", "code": "10005", "name": "Trà quất", "price": 10000 },
+    { "id": "dao", "code": "10006", "name": "Trà đào", "price": 15000 }
   ]
 }
