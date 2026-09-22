@@ -1,0 +1,1737 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Music Box - Quản lý Phòng</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #1a1a2e;
+      background-image: var(--bg-image, none);
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      background-repeat: no-repeat;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 40px;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 15, 30, 0.55);
+      z-index: 0;
+      pointer-events: none;
+    }
+    h1 {
+      margin-bottom: 20px;
+      color: #fff;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+      position: relative;
+      z-index: 1;
+      font-size: 28px;
+      letter-spacing: 1px;
+    }
+    .main-container {
+      display: grid;
+      grid-template-columns: 300px minmax(420px, 520px) 300px;
+      gap: 20px;
+      align-items: stretch;
+      width: 100%;
+      max-width: 1160px;
+      position: relative;
+      z-index: 1;
+    }
+    @media (max-width: 1100px) {
+      .main-container {
+        grid-template-columns: 1fr;
+        max-width: 520px;
+      }
+    }
+    .left-panel {
+      background: rgba(255,255,255,0.97);
+      border-radius: 16px;
+      padding: 22px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+      min-width: 0;
+    }
+    .scan-area {
+      background: #5b9bd5;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+    }
+    .scan-area:hover { background: #4a8ac4; }
+    .scan-area input {
+      border: none;
+      background: transparent;
+      color: white;
+      font-size: 16px;
+      width: 100%;
+      text-align: center;
+      outline: none;
+    }
+    .scan-area input::placeholder { color: rgba(255,255,255,0.8); }
+    .boxes {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .box {
+      padding: 18px 8px;
+      border-radius: 12px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 17px;
+      color: white;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      user-select: none;
+      min-height: 80px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 4px;
+    }
+    .box:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,0.2); }
+    .box.empty { background: #70ad47; }
+    .box.occupied { background: #c00000; }
+    .box.booked { background: #ed7d31; }
+    .box .card-id {
+      font-size: 12px;
+      font-weight: 500;
+      opacity: 0.9;
+    }
+    .actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 20px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 15px;
+      transition: background 0.2s;
+    }
+    .btn-book { background: #5b9bd5; color: white; }
+    .btn-book:hover { background: #4a8ac4; }
+    .btn-settings { background: #7030a0; color: white; }
+    .btn-settings:hover { background: #5a2780; }
+
+    .right-panel {
+      background: linear-gradient(160deg, #3d8fd1 0%, #2b6ea3 100%);
+      border-radius: 16px;
+      padding: 20px;
+      color: white;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+      display: flex;
+      flex-direction: column;
+      min-height: 480px;
+    }
+    .right-panel h2 {
+      text-align: center;
+      margin-bottom: 15px;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .booking-list {
+      background: white;
+      color: #333;
+      border-radius: 10px;
+      padding: 10px;
+      flex: 1;
+      min-height: 280px;
+      max-height: none;
+      overflow-y: auto;
+    }
+    .booking-item {
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 8px 10px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      line-height: 1.4;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .booking-item:hover { background: #f0f7ff; }
+    .booking-item strong { color: #c00000; }
+    .booking-item.arrived { border-left: 4px solid #70ad47; opacity: 0.85; }
+    .booking-item.cancelled { border-left: 4px solid #999; opacity: 0.5; text-decoration: line-through; }
+    .booking-status {
+      display: inline-block;
+      font-size: 11px;
+      padding: 1px 6px;
+      border-radius: 4px;
+      margin-left: 4px;
+      font-weight: 600;
+    }
+    .booking-status.pending { background: #fff3cd; color: #856404; }
+    .booking-status.arrived { background: #d4edda; color: #155724; }
+    .booking-status.cancelled { background: #e2e3e5; color: #6c757d; }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+    }
+    .modal h3 { margin-bottom: 16px; color: #333; }
+    .modal label { display: block; margin: 8px 0 4px; font-weight: 500; }
+    .modal input, .modal textarea, .modal select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 15px;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      justify-content: flex-end;
+    }
+    .btn-primary { background: #c00000; color: white; }
+    .btn-primary:hover { background: #a00000; }
+    .btn-secondary { background: #6c757d; color: white; }
+    .btn-secondary:hover { background: #5a6268; }
+    .btn-success { background: #70ad47; color: white; }
+    .btn-success:hover { background: #5a8c38; }
+
+    .room-popup {
+      display: none;
+      position: absolute;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+      padding: 12px;
+      z-index: 50;
+      min-width: 160px;
+    }
+    .room-popup.active { display: block; }
+    .room-popup button {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin: 4px 0;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .room-popup .btn-menu { background: #ed7d31; color: white; }
+    .room-popup .btn-pay { background: #c00000; color: white; }
+    .room-popup .btn-info { background: #5b9bd5; color: white; }
+
+    .menu-layout {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .menu-list {
+      flex: 1;
+      min-width: 260px;
+    }
+    .menu-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .menu-item-name { flex: 1; }
+    .menu-item-price { width: 80px; text-align: right; color: #c00000; font-weight: 600; }
+    .qty-control {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .qty-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: none;
+      background: #c00000;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .qty-btn:hover { background: #a00000; }
+    .qty-val {
+      min-width: 24px;
+      text-align: center;
+      font-weight: 600;
+    }
+    .bill-panel {
+      width: 220px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .bill-panel h4 { margin-bottom: 10px; }
+    .bill-line {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      margin: 4px 0;
+    }
+    .bill-total {
+      border-top: 2px solid #c00000;
+      margin-top: 10px;
+      padding-top: 8px;
+      font-weight: bold;
+      font-size: 16px;
+      color: #c00000;
+    }
+
+    .invoice {
+      font-family: monospace;
+      width: 280px;
+      margin: 0 auto;
+      padding: 10px;
+      background: white;
+      color: #000;
+    }
+    .invoice h2 { text-align: center; font-size: 18px; margin-bottom: 8px; }
+    .invoice .center { text-align: center; }
+    .invoice .line { border-top: 1px dashed #000; margin: 8px 0; }
+    .invoice table { width: 100%; font-size: 13px; }
+    .invoice td { padding: 2px 0; }
+    .invoice .right { text-align: right; }
+    .invoice .total { font-weight: bold; font-size: 15px; }
+
+    @media print {
+      body * { visibility: hidden; }
+      .invoice, .invoice * { visibility: visible; }
+      .invoice { position: absolute; left: 0; top: 0; }
+    }
+
+    .settings-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .settings-row label { min-width: 180px; }
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      z-index: 2000;
+      display: none;
+    }
+    .toast.show { display: block; animation: fade 2.5s forwards; }
+    @keyframes fade {
+      0% { opacity: 1; }
+      70% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    .status-bar {
+      margin-top: 15px;
+      font-size: 12px;
+      color: #555;
+      text-align: center;
+      line-height: 1.5;
+    }
+    .config-note {
+      font-size: 11px;
+      color: #888;
+      margin-top: 6px;
+      text-align: center;
+    }
+    .notify-panel {
+      background: linear-gradient(160deg, #3d8fd1 0%, #2b6ea3 100%);
+      border-radius: 16px;
+      padding: 20px;
+      color: white;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+      display: flex;
+      flex-direction: column;
+      min-height: 480px;
+      max-height: none;
+      overflow: hidden;
+    }
+    .notify-panel h2 { text-align: center; font-size: 18px; margin-bottom: 12px; font-weight: 600; }
+    #notifyList {
+      flex: 1;
+      overflow-y: auto;
+      min-height: 280px;
+    }
+    .notify-item {
+      background: white;
+      color: #333;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      line-height: 1.4;
+      border-left: 4px solid #ed7d31;
+      animation: pulse-border 1.2s ease-in-out infinite;
+    }
+    .notify-item .n-box { font-weight: bold; color: #c00000; }
+    .notify-item button {
+      margin-top: 6px; padding: 6px 12px; border: none; border-radius: 6px;
+      background: #70ad47; color: white; cursor: pointer; font-weight: 600; font-size: 12px;
+    }
+    @keyframes pulse-border {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(237,125,49,0.5); }
+      50% { box-shadow: 0 0 0 4px rgba(237,125,49,0.35); }
+    }
+    .booking-item.blink {
+      animation: blink-bg 1s ease-in-out infinite;
+    }
+    @keyframes blink-bg {
+      0%, 100% { background: #fff3cd; }
+      50% { background: #ff6b6b; color: #fff; }
+    }
+    .booking-item.blink strong { color: inherit; }
+    .qr-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px;
+    }
+    .qr-item { text-align: center; font-size: 12px; }
+    .qr-item img { width: 100%; max-width: 100px; border: 1px solid #ddd; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <h1>Music Box</h1>
+
+  <div class="main-container">
+    <div class="notify-panel">
+      <h2>Thông báo</h2>
+      <div id="notifyList"><div style="text-align:center;opacity:0.8;font-size:13px;">Chưa có order</div></div>
+    </div>
+    <div class="left-panel">
+      <div class="scan-area" id="scanArea">
+        <input type="text" id="cardInput" placeholder="Quẹt thẻ vào đây" autocomplete="off">
+      </div>
+
+      <div class="boxes" id="boxesContainer"></div>
+
+      <div class="actions">
+        <button class="btn btn-book" id="btnBook">Đặt Phòng</button>
+        <button class="btn btn-settings" id="btnSettings">Cài đặt</button>
+      </div>
+
+      <div class="status-bar" id="statusBar">Đang tải cấu hình...</div>
+      <div class="config-note">Giá &amp; menu nằm trong file <strong>config.json</strong></div>
+    </div>
+
+    <div class="right-panel">
+      <h2>Lịch đặt phòng</h2>
+      <div class="booking-list" id="bookingList">
+        <div style="color:#888; text-align:center; padding:20px;">Chưa có lịch đặt</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Room action popup -->
+  <div class="room-popup" id="roomPopup">
+    <button class="btn-info" id="popupInfo">Thông tin</button>
+    <button class="btn-menu" id="popupMenu">Menu</button>
+    <button class="btn-pay" id="popupPay">Thanh toán</button>
+  </div>
+
+  <!-- Booking Modal -->
+  <div class="modal-overlay" id="bookingModal">
+    <div class="modal">
+      <h3>Đặt Phòng</h3>
+      <label>Chọn phòng</label>
+      <select id="bookBox">
+        <option value="1">BOX 1</option>
+        <option value="2">BOX 2</option>
+        <option value="3">BOX 3</option>
+        <option value="4">BOX 4</option>
+        <option value="5">BOX 5</option>
+        <option value="6">BOX 6</option>
+      </select>
+      <label>Họ và tên</label>
+      <input type="text" id="bookName" placeholder="Nguyễn Văn A">
+      <label>Số điện thoại</label>
+      <input type="tel" id="bookPhone" placeholder="09xx xxx xxx">
+      <label>Ngày giờ đặt</label>
+      <input type="datetime-local" id="bookDateTime">
+      <label>Ghi chú</label>
+      <textarea id="bookNote" rows="2" placeholder="Ghi chú thêm..."></textarea>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('bookingModal')">Hủy</button>
+        <button class="btn btn-primary" id="btnSaveBook">Lưu đặt phòng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Menu Modal -->
+  <div class="modal-overlay" id="menuModal">
+    <div class="modal" style="max-width: 700px;">
+      <h3>Menu - <span id="menuBoxTitle">BOX</span></h3>
+      <div style="margin-bottom:12px;">
+        <input type="text" id="menuBarcodeInput" placeholder="Quét mã vạch / nhập mã món rồi Enter"
+          style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; font-size:15px;"
+          autocomplete="off">
+      </div>
+      <div class="menu-layout">
+        <div class="menu-list" id="menuList"></div>
+        <div class="bill-panel">
+          <h4>Hóa đơn tạm</h4>
+          <div id="tempBill"></div>
+          <div class="bill-total">
+            Tổng: <span id="tempTotal">0</span> đ
+          </div>
+          <button class="btn btn-success" style="width:100%; margin-top:12px;" id="btnSaveOrder">Lưu món</button>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('menuModal')">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment / Invoice Modal -->
+  <div class="modal-overlay" id="payModal">
+    <div class="modal" style="max-width: 420px;">
+      <h3>Thanh toán - <span id="payBoxTitle">BOX</span></h3>
+      <div id="invoicePreview" class="invoice"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('payModal')">Hủy</button>
+        <button class="btn btn-success" id="btnPrint">In hóa đơn</button>
+        <button class="btn btn-primary" id="btnConfirmPay">Xác nhận thanh toán</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Info Modal -->
+  <div class="modal-overlay" id="infoModal">
+    <div class="modal">
+      <h3>Thông tin phòng - <span id="infoBoxTitle">BOX</span></h3>
+      <div id="infoContent"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('infoModal')">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal">
+      <h3>Cài đặt (tạm thời)</h3>
+      <div class="settings-row">
+        <label>Giá ban ngày (08:00-18:00)</label>
+        <input type="number" id="settingDayRate" value="50000" min="0" step="1000">
+      </div>
+      <div class="settings-row">
+        <label>Giá ban đêm (18:01-07:59)</label>
+        <input type="number" id="settingNightRate" value="60000" min="0" step="1000">
+      </div>
+      <div class="settings-row">
+        <label>Làm tròn tối thiểu (phút)</label>
+        <input type="number" id="settingMinMinutes" value="60" min="1">
+      </div>
+      <p style="font-size:13px; color:#666; margin:12px 0;">
+        <strong>Lưu ý:</strong> Để lưu lâu dài hãy sửa file <code>config.json</code> rồi tải lại trang.<br>
+        Cài đặt bên dưới chỉ có hiệu lực trong phiên hiện tại.
+      </p>
+      <div class="settings-row">
+        <button class="btn btn-secondary" id="btnExport">Export JSON</button>
+        <button class="btn btn-secondary" id="btnImport">Import JSON</button>
+        <input type="file" id="importFile" accept=".json" style="display:none">
+      </div>
+      <div class="settings-row" style="margin-top:12px;">
+        <button class="btn btn-success" id="btnSyncSheet">Đồng bộ lên Sheet</button>
+        <button class="btn btn-book" id="btnLoadSheet">Tải từ Sheet</button>
+      </div>
+      <div class="settings-row" style="margin-top:12px;">
+        <label style="min-width:auto;">In lại HĐ</label>
+        <input type="text" id="reprintCode" placeholder="Mã hóa đơn HD..." style="flex:1; padding:8px; border:1px solid #ccc; border-radius:6px;">
+        <button class="btn btn-primary" id="btnReprint">In lại</button>
+      </div>
+      <div class="settings-row">
+        <label>Ảnh nền (URL)</label>
+        <input type="text" id="settingBgImage" placeholder="https://... hoặc background.jpg" style="flex:1;padding:8px;border:1px solid #ccc;border-radius:6px;">
+      </div>
+      <div class="settings-row" style="margin-top:12px;">
+        <button class="btn btn-book" id="btnReloadConfig" type="button">Tải lại config (giá phòng)</button>
+        <button class="btn btn-success" id="btnSyncInv" type="button">Tải menu từ Sheet</button>
+      </div>
+      <p style="font-size:13px;margin-top:12px;"><strong>QR Order từng phòng</strong> (khách quét để gọi món)</p>
+      <div class="qr-grid" id="qrGrid"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('settingsModal')">Đóng</button>
+        <button class="btn btn-primary" id="btnSaveSettings">Lưu tạm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Booking action modal -->
+  <div class="modal-overlay" id="bookingActionModal">
+    <div class="modal" style="max-width:360px;">
+      <h3>Lịch đặt phòng</h3>
+      <div id="bookingActionInfo" style="margin-bottom:16px; line-height:1.5;"></div>
+      <div class="modal-actions" style="justify-content:center; flex-wrap:wrap;">
+        <button class="btn btn-success" id="btnBookingArrived">Đã đến</button>
+        <button class="btn btn-primary" id="btnBookingCancel" style="background:#6c757d;">Hủy đặt</button>
+        <button class="btn btn-secondary" onclick="closeModal('bookingActionModal')">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ========== CONFIG & STATE ==========
+    let MENU = [];
+    let CARD_MAP = {};
+    let SHEET_API = "";
+
+    let state = {
+      rooms: {},
+      bookings: [],
+      settings: {
+        dayRate: 50000,
+        nightRate: 60000,
+        dayStart: '08:00',
+        dayEnd: '18:00',
+        minMinutes: 60
+      }
+    };
+
+    for (let i = 1; i <= 6; i++) {
+      state.rooms[i] = {
+        status: 'empty',
+        entryTime: null,
+        cardId: null,
+        invoiceCode: null,
+        orders: [],
+        customerName: null,
+        phone: null
+      };
+    }
+
+    // ========== LOAD CONFIG.JSON ==========
+    async function loadConfig() {
+      try {
+        const res = await fetch('config.json?t=' + Date.now());
+        if (!res.ok) throw new Error('Không tìm thấy config.json');
+        const cfg = await res.json();
+
+        if (cfg.dayRate != null) state.settings.dayRate = cfg.dayRate;
+        if (cfg.nightRate != null) state.settings.nightRate = cfg.nightRate;
+        if (cfg.dayStart) state.settings.dayStart = cfg.dayStart;
+        if (cfg.dayEnd) state.settings.dayEnd = cfg.dayEnd;
+        if (cfg.minMinutes) state.settings.minMinutes = cfg.minMinutes;
+        // Menu KHÔNG lấy từ config.json — chỉ từ Inventory_quantity
+        // (cfg.menu bỏ qua)
+        if (cfg.cards) {
+          CARD_MAP = {};
+          for (const [box, card] of Object.entries(cfg.cards)) {
+            CARD_MAP[String(box)] = String(card);
+          }
+        }
+        if (cfg.sheetApiUrl) SHEET_API = String(cfg.sheetApiUrl).trim();
+        applyBackground(cfg.backgroundImage || '');
+        updateStatusBar();
+        await loadInventoryFromSheet();
+        return true;
+      } catch (err) {
+        console.warn('Lỗi load config.json:', err);
+        // Không seed menu mặc định — chờ Sheet
+        if (!Object.keys(CARD_MAP).length) {
+          CARD_MAP = { '1':'11111','2':'22222','3':'33333','4':'44444','5':'55555','6':'66666' };
+        }
+        document.getElementById('statusBar').textContent = 'Dùng cấu hình mặc định (không load được config.json)';
+        return false;
+      }
+    }
+
+    /** MENU lấy 100% từ sheet Inventory_quantity */
+    async function loadInventoryFromSheet() {
+      if (!SHEET_API) {
+        console.warn('Chưa có sheetApiUrl — không load được menu từ Sheet');
+        return false;
+      }
+      try {
+        const res = await fetch(SHEET_API + '?action=inventory&t=' + Date.now());
+        const data = await res.json();
+        if (!data.ok) return false;
+        if (!data.items || !data.items.length) {
+          showToast('Sheet Inventory_quantity trống — thêm món trên Sheet');
+          MENU = [];
+          return false;
+        }
+        MENU = data.items.map(it => {
+          const code = String(it.code || '');
+          return {
+            id: code,
+            code: code,
+            name: it.name || code,
+            price: Number(it.price) || 0,
+            stock: Number(it.stock) || 0
+          };
+        }).filter(m => m.code);
+        updateStatusBar();
+        return true;
+      } catch (e) {
+        console.warn('inventory', e);
+        showToast('Không tải được Inventory_quantity');
+        return false;
+      }
+    }
+
+    async function deductStock(items) {
+      if (!items || !items.length) return;
+      // qty > 0: trừ local; qty < 0: cộng local
+      items.forEach(it => {
+        const m = MENU.find(x => x.id === it.id || String(x.code) === String(it.code));
+        if (m) {
+          const next = (m.stock || 0) - (it.qty || 0);
+          m.stock = next < 0 ? 0 : next;
+        }
+      });
+      if (!SHEET_API) return;
+      try {
+        await fetch(SHEET_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'deductInventory', items })
+        });
+      } catch (e) { console.warn(e); }
+    }
+
+    function applyBackground(url) {
+      url = (url || '').trim();
+      if (url) {
+        document.documentElement.style.setProperty('--bg-image', 'url("' + url.replace(/"/g, '') + '")');
+      } else {
+        document.documentElement.style.setProperty('--bg-image', 'none');
+      }
+    }
+
+    function updateStatusBar() {
+      const s = state.settings;
+      const sheetStatus = SHEET_API ? ' · <span style="color:#70ad47">Google Sheet: ON</span>' : ' · <span style="color:#999">Google Sheet: OFF</span>';
+      document.getElementById('statusBar').innerHTML =
+        `Ban ngày ${s.dayStart}-${s.dayEnd}: <b>${s.dayRate.toLocaleString('vi-VN')}</b>đ/giờ · Ban đêm: <b>${s.nightRate.toLocaleString('vi-VN')}</b>đ/giờ` +
+        sheetStatus + ` · Menu Sheet: <b>${MENU.length}</b> món`;
+      const note = document.getElementById('configNote');
+      if (note) note.textContent = 'Menu lấy từ Inventory_quantity · Giá phòng trong config.json';
+    }
+
+    // ========== PERSISTENCE ==========
+    function loadState() {
+      try {
+        const raw = localStorage.getItem('musicbox_state');
+        if (raw) {
+          const saved = JSON.parse(raw);
+          if (saved.rooms) state.rooms = saved.rooms;
+          if (saved.bookings) state.bookings = saved.bookings;
+          for (let i = 1; i <= 6; i++) {
+            if (!state.rooms[i]) {
+              state.rooms[i] = { status: 'empty', entryTime: null, cardId: null, orders: [], customerName: null, phone: null };
+            }
+          }
+        }
+      } catch (e) { console.warn(e); }
+    }
+
+    function saveState() {
+      localStorage.setItem('musicbox_state', JSON.stringify({
+        rooms: state.rooms,
+        bookings: state.bookings
+      }));
+    }
+
+    // ========== RENDER ==========
+    function renderBoxes() {
+      const container = document.getElementById('boxesContainer');
+      container.innerHTML = '';
+      for (let i = 1; i <= 6; i++) {
+        const r = state.rooms[i];
+        const div = document.createElement('div');
+        div.className = 'box ' + (r.status === 'occupied' ? 'occupied' : r.status === 'booked' ? 'booked' : 'empty');
+        const assignedCard = CARD_MAP[String(i)] || '';
+        const displayCard = r.status === 'occupied' && r.cardId ? r.cardId : assignedCard;
+        const invShow = r.status === 'occupied' && r.invoiceCode ? r.invoiceCode : '';
+        div.innerHTML = `
+          <div>BOX ${i}</div>
+          <div class="card-id">${displayCard ? 'Thẻ: ' + displayCard : ''}</div>
+          ${invShow ? '<div class="card-id" style="font-size:10px;">' + invShow + '</div>' : ''}
+        `;
+        div.dataset.box = i;
+        div.addEventListener('click', (e) => onBoxClick(i, e));
+        container.appendChild(div);
+      }
+    }
+
+    function isBookingOverdue(b) {
+      const st = b.status || 'pending';
+      if (st !== 'pending') return false;
+      if (!b.dateTime) return false;
+      return new Date(b.dateTime).getTime() <= Date.now();
+    }
+
+    function renderBookings() {
+      const list = document.getElementById('bookingList');
+      if (!state.bookings.length) {
+        list.innerHTML = '<div style="color:#888; text-align:center; padding:20px;">Chưa có lịch đặt</div>';
+        return;
+      }
+      const sorted = [...state.bookings].sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+      list.innerHTML = sorted.map(b => {
+        const st = b.status || 'pending';
+        const stLabel = st === 'arrived' ? 'Đã đến' : st === 'cancelled' ? 'Đã hủy' : 'Chờ';
+        const blink = isBookingOverdue(b) ? ' blink' : '';
+        return `
+        <div class="booking-item ${st}${blink}" data-id="${b.id}" onclick="onBookingClick('${b.id}')">
+          <strong>BOX ${b.box}</strong>: ${formatDateTime(b.dateTime)}
+          <span class="booking-status ${st}">${stLabel}</span><br>
+          ${b.name} | ${b.phone}<br>
+          ${b.note ? 'Ghi chú: ' + b.note : ''}
+        </div>`;
+      }).join('');
+    }
+
+    function formatDateTime(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      return d.toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function formatMoney(n) {
+      return Math.round(n).toLocaleString('vi-VN');
+    }
+
+    /** Làm tròn lên hàng nghìn: 790167 → 791000 */
+    function roundThousand(n) {
+      n = Number(n) || 0;
+      return Math.ceil(n / 1000) * 1000;
+    }
+
+    // ========== CARD SCAN ==========
+    document.getElementById('cardInput').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleCardSwipe(this.value.trim());
+        this.value = '';
+      }
+    });
+
+    function handleCardSwipe(cardId) {
+      if (!cardId) {
+        showToast('Vui lòng nhập mã thẻ');
+        return;
+      }
+
+      let targetBox = null;
+      for (const [box, card] of Object.entries(CARD_MAP)) {
+        if (String(card) === String(cardId)) {
+          targetBox = parseInt(box);
+          break;
+        }
+      }
+
+      if (!targetBox) {
+        showToast(`Mã thẻ ${cardId} không khớp với phòng nào. Kiểm tra config.json`);
+        return;
+      }
+
+      const room = state.rooms[targetBox];
+
+      if (room.status === 'occupied') {
+        showToast(`Thẻ ${cardId} (BOX ${targetBox}) quẹt ra. Mở thanh toán.`);
+        openPay(targetBox);
+        return;
+      }
+
+      room.status = 'occupied';
+      room.entryTime = new Date().toISOString();
+      room.cardId = cardId;
+      room.orders = [];
+      room.customerName = null;
+      room.phone = null;
+      room.invoiceCode = null;
+      saveState();
+      renderBoxes();
+      showToast('Đang cấp mã hóa đơn...');
+      // Lấy mã HĐ tuần tự HD20260922001, 002, ...
+      fetchNextInvoiceCode().then(code => {
+        room.invoiceCode = code;
+        saveState();
+        syncToSheet();
+        renderBoxes();
+        showToast('Khách thẻ ' + cardId + ' vào BOX ' + targetBox + ' — ' + code);
+      }).catch(err => {
+        console.warn(err);
+        showToast('Khách vào BOX ' + targetBox + ' (lỗi cấp mã HĐ)');
+      });
+    }
+
+    // ========== BOX CLICK ==========
+    let currentPopupBox = null;
+
+    function onBoxClick(boxNum, event) {
+      const room = state.rooms[boxNum];
+      if (room.status !== 'occupied') {
+        if (room.status === 'empty') {
+          const card = CARD_MAP[String(boxNum)] || '?';
+          showToast(`Phòng trống. Quẹt thẻ ${card} để vào.`);
+        } else {
+          showToast('Phòng đã được đặt trước.');
+        }
+        return;
+      }
+      currentPopupBox = boxNum;
+      const popup = document.getElementById('roomPopup');
+      popup.style.left = (event.pageX + 10) + 'px';
+      popup.style.top = (event.pageY + 10) + 'px';
+      popup.classList.add('active');
+    }
+
+    document.addEventListener('click', (e) => {
+      const popup = document.getElementById('roomPopup');
+      if (!popup.contains(e.target) && !e.target.closest('.box')) {
+        popup.classList.remove('active');
+      }
+    });
+
+    document.getElementById('popupInfo').onclick = () => {
+      document.getElementById('roomPopup').classList.remove('active');
+      openInfo(currentPopupBox);
+    };
+    document.getElementById('popupMenu').onclick = () => {
+      document.getElementById('roomPopup').classList.remove('active');
+      openMenu(currentPopupBox);
+    };
+    document.getElementById('popupPay').onclick = () => {
+      document.getElementById('roomPopup').classList.remove('active');
+      openPay(currentPopupBox);
+    };
+
+    // ========== BOOKING ==========
+    document.getElementById('btnBook').onclick = () => {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      now.setHours(now.getHours() + 1);
+      document.getElementById('bookDateTime').value = now.toISOString().slice(0, 16);
+      document.getElementById('bookName').value = '';
+      document.getElementById('bookPhone').value = '';
+      document.getElementById('bookNote').value = '';
+      openModal('bookingModal');
+    };
+
+    document.getElementById('btnSaveBook').onclick = () => {
+      const box = document.getElementById('bookBox').value;
+      const name = document.getElementById('bookName').value.trim();
+      const phone = document.getElementById('bookPhone').value.trim();
+      const dateTime = document.getElementById('bookDateTime').value;
+      const note = document.getElementById('bookNote').value.trim();
+
+      if (!name || !phone || !dateTime) {
+        showToast('Vui lòng điền đầy đủ Tên, SĐT và Thời gian');
+        return;
+      }
+
+      state.bookings.push({
+        id: Date.now(),
+        box: parseInt(box),
+        name, phone, dateTime, note,
+        status: 'pending'
+      });
+      saveState();
+      renderBookings();
+      closeModal('bookingModal');
+      showToast('Đã lưu lịch đặt phòng. Đang gửi Sheet...');
+      syncToSheet().then(() => showToast('Đã gửi đặt phòng lên Google Sheet'));
+    };
+
+    // ========== MENU ==========
+    let menuBox = null;
+    let tempOrders = {};
+
+    async function openMenu(boxNum) {
+      menuBox = boxNum;
+      document.getElementById('menuBoxTitle').textContent = 'BOX ' + boxNum;
+      tempOrders = {};
+      (state.rooms[boxNum].orders || []).forEach(o => {
+        tempOrders[o.id] = o.qty;
+      });
+      // Lấy tồn kho mới nhất trước khi hiện menu
+      await loadInventoryFromSheet();
+      renderMenuList();
+      updateTempBill();
+      openModal('menuModal');
+      const scanEl = document.getElementById('menuBarcodeInput');
+      if (scanEl) { scanEl.value = ''; setTimeout(() => scanEl.focus(), 200); }
+    }
+
+    function renderMenuList() {
+      const list = document.getElementById('menuList');
+      if (!MENU.length) {
+        list.innerHTML = '<p style="color:#888">Chưa có món. Thêm món trên sheet Inventory_quantity</p>';
+        return;
+      }
+      list.innerHTML = MENU.map(item => {
+        const qty = tempOrders[item.id] || 0;
+        const code = item.code || item.id || '';
+        const stock = item.stock != null ? item.stock : '—';
+        const out = (item.stock != null && item.stock <= 0);
+        // Hết hàng: làm mờ chữ, khóa nút +, NHƯNG nút − vẫn bấm được để trả món
+        return `
+          <div class="menu-item">
+            <div class="menu-item-name" style="${out ? 'opacity:0.5;' : ''}">
+              <small style="color:#888">${code}</small> ${item.name}
+              <small style="display:block;color:${out ? '#c00000' : '#70ad47'}">Còn: ${stock}</small>
+            </div>
+            <div class="menu-item-price" style="${out ? 'opacity:0.5;' : ''}">${formatMoney(item.price)}</div>
+            <div class="qty-control">
+              <button class="qty-btn" onclick="changeQty('${item.id}', -1)" ${qty <= 0 ? 'disabled' : ''} title="Trả / giảm món">−</button>
+              <span class="qty-val" id="qty-${item.id}">${qty}</span>
+              <button class="qty-btn" onclick="changeQty('${item.id}', 1)" ${out ? 'disabled' : ''} title="Thêm món">+</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function addByBarcode(code) {
+      code = String(code).trim();
+      if (!code) return;
+      const item = MENU.find(m => String(m.code) === code || String(m.id) === code);
+      if (!item) {
+        showToast('Không tìm thấy món mã: ' + code);
+        return;
+      }
+      changeQty(item.id, 1);
+      showToast('+' + item.name);
+    }
+
+    function changeQty(id, delta) {
+      const item = MENU.find(m => m.id === id);
+      const current = tempOrders[id] || 0;
+      let next = current + delta;
+      if (next < 0) next = 0;
+      // Chỉ chặn tăng khi hết tồn (giảm/trả luôn được)
+      if (delta > 0 && item && item.stock != null && item.stock <= 0) {
+        showToast('Hết hàng: ' + item.name);
+        return;
+      }
+      if (delta > 0 && item && item.stock != null && next > current + item.stock) {
+        next = current + item.stock;
+        showToast('Chỉ còn ' + item.stock + ' ' + item.name);
+      }
+      if (next === 0) delete tempOrders[id];
+      else tempOrders[id] = next;
+      updateTempBill();
+      // Cập nhật lại nút − / + (trạng thái disabled)
+      renderMenuList();
+    }
+
+    function updateTempBill() {
+      const container = document.getElementById('tempBill');
+      let total = 0;
+      let html = '';
+      for (const [id, qty] of Object.entries(tempOrders)) {
+        const item = MENU.find(m => m.id === id);
+        if (!item) continue;
+        const line = item.price * qty;
+        total += line;
+        html += `<div class="bill-line"><span>${item.name} x${qty}</span><span>${formatMoney(line)}</span></div>`;
+      }
+      if (!html) html = '<div style="color:#888; font-size:13px;">Chưa chọn món</div>';
+      container.innerHTML = html;
+      document.getElementById('tempTotal').textContent = formatMoney(total);
+    }
+
+    document.getElementById('btnSaveOrder').onclick = () => {
+      const prev = {};
+      (state.rooms[menuBox].orders || []).forEach(o => { prev[o.id] = o.qty; });
+
+      const orders = [];
+      const deltas = []; // + thêm hoặc - trả lại
+      // Món còn trong tempOrders
+      for (const [id, qty] of Object.entries(tempOrders)) {
+        const item = MENU.find(m => m.id === id);
+        if (!item) continue;
+        const oldQty = prev[id] || 0;
+        if (qty > 0) {
+          orders.push({ id, code: item.code || id, name: item.name, price: item.price, qty });
+        }
+        if (qty !== oldQty) {
+          deltas.push({
+            id, code: item.code || id, name: item.name, price: item.price,
+            qty: qty - oldQty  // âm = trả lại
+          });
+        }
+        delete prev[id];
+      }
+      // Món bị xóa hết (qty về 0 / không còn trong temp)
+      for (const [id, oldQty] of Object.entries(prev)) {
+        if (oldQty > 0) {
+          const item = MENU.find(m => m.id === id);
+          if (item) {
+            deltas.push({
+              id, code: item.code || id, name: item.name, price: item.price,
+              qty: -oldQty
+            });
+          }
+        }
+      }
+      state.rooms[menuBox].orders = orders;
+      saveState();
+      syncToSheet();
+      if (deltas.length) {
+        const invCode = state.rooms[menuBox].invoiceCode || '';
+        saveOrderItemsToSheet(menuBox, deltas, invCode);
+        // qty > 0 trừ kho, qty < 0 cộng kho (trả món)
+        deductStock(deltas);
+      }
+      closeModal('menuModal');
+      showToast('Đã lưu món cho BOX ' + menuBox);
+      loadInventoryFromSheet();
+    };
+
+    // ========== PRICING: DAY / NIGHT ==========
+    function parseTimeToMinutes(hhmm) {
+      const [h, m] = hhmm.split(':').map(Number);
+      return h * 60 + m;
+    }
+
+    function isDayTime(date) {
+      const minutes = date.getHours() * 60 + date.getMinutes();
+      const start = parseTimeToMinutes(state.settings.dayStart);
+      const end = parseTimeToMinutes(state.settings.dayEnd);
+      return minutes >= start && minutes < end;
+    }
+
+    function calcTimeCharge(entryIso, exitDate = new Date()) {
+      if (!entryIso) return { minutes: 0, charge: 0, dayMinutes: 0, nightMinutes: 0, entry: null, exit: exitDate };
+
+      let entry = new Date(entryIso);
+      let exit = new Date(exitDate);
+
+      let totalMs = exit - entry;
+      let totalMinutes = Math.ceil(totalMs / 60000);
+      if (totalMinutes < 1) totalMinutes = 1;
+
+      // Áp dụng minMinutes
+      if (totalMinutes < state.settings.minMinutes) {
+        exit = new Date(entry.getTime() + state.settings.minMinutes * 60000);
+        totalMinutes = state.settings.minMinutes;
+      }
+
+      // Đếm từng phút thuộc ban ngày / ban đêm
+      let dayMinutes = 0;
+      let nightMinutes = 0;
+      let cursor = new Date(entry);
+
+      for (let i = 0; i < totalMinutes; i++) {
+        if (isDayTime(cursor)) dayMinutes++;
+        else nightMinutes++;
+        cursor = new Date(cursor.getTime() + 60000);
+      }
+
+      const dayCharge = (dayMinutes / 60) * state.settings.dayRate;
+      const nightCharge = (nightMinutes / 60) * state.settings.nightRate;
+      const charge = Math.round(dayCharge + nightCharge);
+
+      return {
+        minutes: totalMinutes,
+        charge,
+        dayMinutes,
+        nightMinutes,
+        dayCharge: Math.round(dayCharge),
+        nightCharge: Math.round(nightCharge),
+        entry,
+        exit
+      };
+    }
+
+    // ========== PAYMENT ==========
+    function openPay(boxNum) {
+      const room = state.rooms[boxNum];
+      if (room.status !== 'occupied') {
+        showToast('Phòng không có khách');
+        return;
+      }
+      document.getElementById('payBoxTitle').textContent = 'BOX ' + boxNum;
+
+      const actualExit = new Date();
+      const time = calcTimeCharge(room.entryTime, actualExit);
+      // Phút thực tế (chưa làm tròn min)
+      let actualMinutes = 1;
+      if (room.entryTime) {
+        actualMinutes = Math.max(1, Math.ceil((actualExit - new Date(room.entryTime)) / 60000));
+      }
+      let itemsTotal = 0;
+      room.orders.forEach(o => itemsTotal += o.price * o.qty);
+      const roomChargeRounded = roundThousand(time.charge);
+      const itemsTotalRounded = roundThousand(itemsTotal);
+      const grandTotal = roomChargeRounded + itemsTotalRounded;
+
+      // Mã hóa đơn đã cấp khi vào phòng
+      const invoiceCode = room.invoiceCode || ('HD' + Date.now().toString().slice(-10));
+
+      let timeLabel;
+      if (actualMinutes < state.settings.minMinutes) {
+        timeLabel = actualMinutes + ' phút (tính đủ ' + state.settings.minMinutes + ' phút)';
+      } else {
+        timeLabel = time.minutes + ' phút';
+      }
+
+      const inv = document.getElementById('invoicePreview');
+      inv.innerHTML = `
+        <h2>MUSIC BOX</h2>
+        <div class="center">HÓA ĐƠN THANH TOÁN</div>
+        <div class="center" style="font-size:12px;">Mã HĐ: ${invoiceCode}</div>
+        <div class="line"></div>
+        <div>Phòng: BOX ${boxNum}</div>
+        <div>Thẻ: ${room.cardId || '—'}</div>
+        <div>Vào: ${formatDateTime(room.entryTime)}</div>
+        <div>Ra: ${formatDateTime(actualExit.toISOString())}</div>
+        <div>Thời gian: ${timeLabel}</div>
+        <div class="line"></div>
+        <table>
+          ${time.dayMinutes > 0 ? `<tr><td>Ban ngày (${time.dayMinutes}p)</td><td class="right">${formatMoney(time.dayCharge)}</td></tr>` : ''}
+          ${time.nightMinutes > 0 ? `<tr><td>Ban đêm (${time.nightMinutes}p)</td><td class="right">${formatMoney(time.nightCharge)}</td></tr>` : ''}
+          <tr><td><b>Tiền phòng</b></td><td class="right"><b>${formatMoney(roomChargeRounded)}</b></td></tr>
+          ${room.orders.map(o => `
+            <tr><td>${o.name} x${o.qty}</td><td class="right">${formatMoney(o.price * o.qty)}</td></tr>
+          `).join('')}
+        </table>
+        <div class="line"></div>
+        <div class="total">TỔNG CỘNG: ${formatMoney(grandTotal)} đ</div>
+        <div class="line"></div>
+        <div class="center" style="font-size:12px;">Cảm ơn quý khách!</div>
+      `;
+      inv.dataset.box = boxNum;
+      inv.dataset.invoiceCode = invoiceCode;
+      inv.dataset.actualExit = actualExit.toISOString();
+      document.getElementById('btnConfirmPay').style.display = '';
+      openModal('payModal');
+    }
+
+    document.getElementById('btnPrint').onclick = () => window.print();
+
+    document.getElementById('btnConfirmPay').onclick = () => {
+      const invEl = document.getElementById('invoicePreview');
+      const boxNum = parseInt(invEl.dataset.box);
+      const invoiceCode = invEl.dataset.invoiceCode || ('HD' + Date.now().toString().slice(-10));
+      const actualExitIso = invEl.dataset.actualExit || new Date().toISOString();
+      const room = state.rooms[boxNum];
+      const time = calcTimeCharge(room.entryTime, new Date(actualExitIso));
+      let itemsTotal = 0;
+      (room.orders || []).forEach(o => itemsTotal += o.price * o.qty);
+      const roomChargeRounded = roundThousand(time.charge);
+      const itemsTotalRounded = roundThousand(itemsTotal);
+      const grandTotal = roomChargeRounded + itemsTotalRounded;
+
+      const invoiceData = {
+        invoiceCode,
+        box: boxNum,
+        cardId: room.cardId,
+        entryTime: room.entryTime,
+        exitTime: actualExitIso,
+        minutes: time.minutes,
+        dayMinutes: time.dayMinutes,
+        nightMinutes: time.nightMinutes,
+        roomCharge: roomChargeRounded,
+        items: room.orders || [],
+        itemsTotal: itemsTotalRounded,
+        grandTotal,
+        html: invEl.innerHTML
+      };
+
+      // Gửi hóa đơn lên Sheet + Export_Invoices
+      saveInvoiceToSheet(invoiceData);
+
+      state.rooms[boxNum] = {
+        status: 'empty',
+        entryTime: null,
+        cardId: null,
+        invoiceCode: null,
+        orders: [],
+        customerName: null,
+        phone: null
+      };
+      saveState();
+      syncToSheet();
+      renderBoxes();
+      closeModal('payModal');
+      showToast('Đã thanh toán & trả phòng BOX ' + boxNum);
+    };
+
+    // ========== INFO ==========
+    function openInfo(boxNum) {
+      const room = state.rooms[boxNum];
+      document.getElementById('infoBoxTitle').textContent = 'BOX ' + boxNum;
+      const assigned = CARD_MAP[String(boxNum)] || '—';
+      const time = room.entryTime ? calcTimeCharge(room.entryTime) : null;
+      let html = `
+        <p><strong>Mã thẻ gán sẵn:</strong> ${assigned}</p>
+        <p><strong>Trạng thái:</strong> ${room.status === 'occupied' ? 'Đang có khách' : 'Trống'}</p>
+        <p><strong>Thẻ đang dùng:</strong> ${room.cardId || '—'}</p>
+        <p><strong>Giờ vào:</strong> ${room.entryTime ? formatDateTime(room.entryTime) : '—'}</p>
+      `;
+      if (time) {
+        html += `<p><strong>Đã dùng:</strong> ${time.minutes} phút</p>`;
+        html += `<p>Ban ngày: ${time.dayMinutes}p → ${formatMoney(time.dayCharge)}đ</p>`;
+        html += `<p>Ban đêm: ${time.nightMinutes}p → ${formatMoney(time.nightCharge)}đ</p>`;
+        html += `<p><strong>Tiền phòng ước tính:</strong> ${formatMoney(time.charge)} đ</p>`;
+      }
+      if (room.orders.length) {
+        html += '<p><strong>Món đã gọi:</strong></p><ul>';
+        room.orders.forEach(o => {
+          html += `<li>${o.name} x${o.qty} = ${formatMoney(o.price * o.qty)} đ</li>`;
+        });
+        html += '</ul>';
+      } else {
+        html += '<p>Chưa gọi món</p>';
+      }
+      document.getElementById('infoContent').innerHTML = html;
+      openModal('infoModal');
+    }
+
+    // ========== SETTINGS ==========
+    document.getElementById('btnSettings').onclick = () => {
+      document.getElementById('settingDayRate').value = state.settings.dayRate;
+      document.getElementById('settingNightRate').value = state.settings.nightRate;
+      document.getElementById('settingMinMinutes').value = state.settings.minMinutes;
+      const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg-image') || '';
+      const m = bg.match(/url\(["']?(.*?)["']?\)/);
+      document.getElementById('settingBgImage').value = m ? m[1] : '';
+      renderQRCodes();
+      openModal('settingsModal');
+    };
+
+    document.getElementById('btnReloadConfig').onclick = async () => {
+      showToast('Đang tải config.json...');
+      await loadConfig();
+      renderBoxes();
+      updateStatusBar();
+      showToast('Đã tải lại giá / menu / thẻ phòng (' + MENU.length + ' món)');
+    };
+
+    document.getElementById('btnSyncInv').onclick = async () => {
+      if (!SHEET_API) { showToast('Chưa có sheetApiUrl'); return; }
+      showToast('Đang tải Inventory_quantity...');
+      const ok = await loadInventoryFromSheet();
+      if (ok) showToast('Đã tải ' + MENU.length + ' món từ Sheet');
+    };
+
+    document.getElementById('btnSaveSettings').onclick = () => {
+      state.settings.dayRate = parseInt(document.getElementById('settingDayRate').value) || 50000;
+      state.settings.nightRate = parseInt(document.getElementById('settingNightRate').value) || 60000;
+      state.settings.minMinutes = parseInt(document.getElementById('settingMinMinutes').value) || 60;
+      const bg = (document.getElementById('settingBgImage').value || '').trim();
+      applyBackground(bg);
+      updateStatusBar();
+      closeModal('settingsModal');
+      showToast('Đã lưu tạm. Ảnh nền cố định: sửa backgroundImage trong config.json');
+    };
+
+    document.getElementById('btnReprint').onclick = async () => {
+      const code = (document.getElementById('reprintCode').value || '').trim();
+      if (!code) { showToast('Nhập mã hóa đơn'); return; }
+      if (!SHEET_API) { showToast('Chưa cấu hình Sheet'); return; }
+      try {
+        const res = await fetch(SHEET_API + '?action=getInvoice&code=' + encodeURIComponent(code));
+        const data = await res.json();
+        if (!data.ok || !data.html) {
+          showToast(data.error || 'Không tìm thấy hóa đơn');
+          return;
+        }
+        document.getElementById('invoicePreview').innerHTML = data.html;
+        document.getElementById('payBoxTitle').textContent = 'In lại - ' + code;
+        openModal('payModal');
+        // Ẩn nút xác nhận khi in lại
+        document.getElementById('btnConfirmPay').style.display = 'none';
+        closeModal('settingsModal');
+      } catch (err) {
+        showToast('Lỗi tải hóa đơn');
+        console.warn(err);
+      }
+    };
+
+    // Hiện lại nút xác nhận khi mở thanh toán bình thường
+    const _origOpenPay = openPay;
+    // (openPay đã set dataset; khi in lại ta ẩn confirm)
+
+    document.getElementById('btnSyncSheet').onclick = async () => {
+      if (!SHEET_API) {
+        showToast('Chưa có sheetApiUrl trong config.json');
+        return;
+      }
+      showToast('Đang gửi ' + state.bookings.length + ' đặt phòng + Rooms...');
+      await syncToSheet();
+      showToast('Đã gửi: ' + state.bookings.length + ' đặt phòng. F5 Sheet để xem');
+    };
+    document.getElementById('btnLoadSheet').onclick = () => loadFromSheet();
+
+    document.getElementById('btnExport').onclick = () => {
+      const blob = new Blob([JSON.stringify({ rooms: state.rooms, bookings: state.bookings }, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'musicbox_data_' + new Date().toISOString().slice(0,10) + '.json';
+      a.click();
+    };
+
+    document.getElementById('btnImport').onclick = () => document.getElementById('importFile').click();
+    document.getElementById('importFile').onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const data = JSON.parse(ev.target.result);
+          if (data.rooms) state.rooms = data.rooms;
+          if (data.bookings) state.bookings = data.bookings;
+          saveState();
+          renderBoxes();
+          renderBookings();
+          showToast('Import thành công');
+          closeModal('settingsModal');
+        } catch (err) {
+          showToast('File không hợp lệ');
+        }
+      };
+      reader.readAsText(file);
+    };
+
+
+
+    // ========== BOOKING ACTIONS ==========
+    let selectedBookingId = null;
+
+    function onBookingClick(id) {
+      selectedBookingId = String(id);
+      const b = state.bookings.find(x => String(x.id) === selectedBookingId);
+      if (!b) return;
+      const st = b.status || 'pending';
+      const stLabel = st === 'arrived' ? 'Đã đến' : st === 'cancelled' ? 'Đã hủy' : 'Chờ';
+      document.getElementById('bookingActionInfo').innerHTML = `
+        <p><strong>BOX ${b.box}</strong> — ${formatDateTime(b.dateTime)}</p>
+        <p>${b.name} | ${b.phone}</p>
+        <p>${b.note ? 'Ghi chú: ' + b.note : ''}</p>
+        <p>Trạng thái: <strong>${stLabel}</strong></p>
+      `;
+      openModal('bookingActionModal');
+    }
+
+    document.getElementById('btnBookingArrived').onclick = () => {
+      if (!selectedBookingId) return;
+      const b = state.bookings.find(x => String(x.id) === selectedBookingId);
+      if (!b) return;
+      b.status = 'arrived';
+      saveState();
+      syncToSheet();
+      renderBookings();
+      closeModal('bookingActionModal');
+      showToast('Đã đánh dấu ĐÃ ĐẾN — BOX ' + b.box);
+    };
+
+    document.getElementById('btnBookingCancel').onclick = () => {
+      if (!selectedBookingId) return;
+      const b = state.bookings.find(x => String(x.id) === selectedBookingId);
+      if (!b) return;
+      if (!confirm('Hủy đặt phòng BOX ' + b.box + ' — ' + b.name + '?')) return;
+      b.status = 'cancelled';
+      // Hoặc xóa hẳn: state.bookings = state.bookings.filter(x => String(x.id) !== selectedBookingId);
+      saveState();
+      syncToSheet();
+      renderBookings();
+      closeModal('bookingActionModal');
+      showToast('Đã HỦY đặt phòng — BOX ' + b.box);
+    };
+
+    // ========== GOOGLE SHEET SYNC ==========
+    async function fetchNextInvoiceCode() {
+      const d = new Date();
+      const prefix = 'HD' + d.getFullYear() +
+        String(d.getMonth()+1).padStart(2,'0') +
+        String(d.getDate()).padStart(2,'0');
+
+      if (SHEET_API) {
+        try {
+          const res = await fetch(SHEET_API + '?action=nextInvoiceCode&t=' + Date.now());
+          const data = await res.json();
+          if (data.ok && data.code) {
+            // đồng bộ local counter
+            const n = parseInt(String(data.code).slice(-3), 10);
+            if (!isNaN(n)) localStorage.setItem('inv_seq_' + prefix, String(n));
+            return data.code;
+          }
+        } catch (err) {
+          console.warn('nextInvoiceCode error', err);
+        }
+      }
+      // fallback localStorage
+      const key = 'inv_seq_' + prefix;
+      let seq = parseInt(localStorage.getItem(key) || '0', 10) + 1;
+      if (seq > 999) seq = 999;
+      localStorage.setItem(key, String(seq));
+      return prefix + String(seq).padStart(3, '0');
+    }
+
+    async function syncToSheet() {
+      if (!SHEET_API) return;
+      try {
+        // Dùng text/plain để tránh preflight CORS phức tạp với Apps Script
+        const res = await fetch(SHEET_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'saveState',
+            rooms: state.rooms,
+            bookings: state.bookings
+          })
+        });
+        // Apps Script đôi khi redirect; cố đọc JSON nếu được
+        try {
+          const data = await res.json();
+          console.log('Sync Sheet:', data);
+          if (data && data.ok === false) {
+            showToast('Sheet lỗi: ' + (data.error || 'unknown'));
+          }
+        } catch (_) {
+          console.log('Đã gửi dữ liệu lên Google Sheet (không đọc được response)');
+        }
+      } catch (err) {
+        console.warn('Lỗi sync Google Sheet:', err);
+        showToast('Không gửi được lên Google Sheet');
+      }
+    }
+
+    async function saveInvoiceToSheet(invoice) {
+      if (!SHEET_API) return;
+      try {
+        await fetch(SHEET_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'saveInvoice',
+            invoice
+          })
+        });
+        console.log('Đã gửi hóa đơn lên Sheet');
+      } catch (err) {
+        console.warn('Lỗi lưu hóa đơn:', err);
+      }
+    }
+
+    /** Ghi từng món vào sheet MenuList (Thời gian xuất = lúc chọn món) */
+    async function saveOrderItemsToSheet(boxNum, items, invoiceCode) {
+      if (!SHEET_API || !items || !items.length) return;
+      try {
+        await fetch(SHEET_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'saveOrderItems',
+            order: {
+              box: boxNum,
+              invoiceCode: invoiceCode || '',
+              items: items,
+              time: new Date().toISOString()
+            }
+          })
+        });
+        console.log('Đã gửi món lên MenuList');
+      } catch (err) {
+        console.warn('Lỗi MenuList:', err);
+      }
+    }
+
+    async function loadFromSheet() {
+      if (!SHEET_API) {
+        showToast('Chưa cấu hình sheetApiUrl trong config.json');
+        return;
+      }
+      try {
+        const res = await fetch(SHEET_API + '?action=load');
+        const data = await res.json();
+        if (data.ok) {
+          if (data.rooms) state.rooms = data.rooms;
+          if (data.bookings) state.bookings = data.bookings;
+          saveState();
+          renderBoxes();
+          renderBookings();
+          showToast('Đã tải dữ liệu từ Google Sheet');
+        } else {
+          showToast('Lỗi: ' + (data.error || 'unknown'));
+        }
+      } catch (err) {
+        console.warn(err);
+        showToast('Không tải được từ Google Sheet');
+      }
+    }
+
+    // ========== MODAL HELPERS ==========
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.remove('show');
+      void t.offsetWidth;
+      t.classList.add('show');
+    }
+
+    // ========== INIT ==========
+
+    // ========== THÔNG BÁO ORDER (QR) ==========
+    async function pollNotifications() {
+      if (!SHEET_API) return;
+      try {
+        const res = await fetch(SHEET_API + '?action=notifications&t=' + Date.now());
+        const data = await res.json();
+        if (!data.ok) return;
+        renderNotifications(data.items || []);
+      } catch (e) { console.warn(e); }
+    }
+
+    let lastNotifications = [];
+
+    function renderNotifications(items) {
+      lastNotifications = items || [];
+      const list = document.getElementById('notifyList');
+      if (!list) return;
+      if (!items.length) {
+        list.innerHTML = '<div style="text-align:center;opacity:0.8;font-size:13px;">Chưa có order</div>';
+        return;
+      }
+      list.innerHTML = items.map(n => `
+        <div class="notify-item">
+          <div class="n-box">BOX ${n.box}${n.invoiceCode ? ' · ' + n.invoiceCode : ''}</div>
+          <div style="white-space:pre-line;">${n.itemsText || n.items || ''}</div>
+          ${n.note ? '<div><em>' + n.note + '</em></div>' : ''}
+          <div style="font-size:11px;color:#666;">${n.time || ''}</div>
+          <button onclick="ackNotify('${n.id}')">Đã nhận</button>
+        </div>
+      `).join('');
+    }
+
+    async function ackNotify(id) {
+      const n = lastNotifications.find(x => String(x.id) === String(id));
+      if (n && n.box) {
+        const boxNum = parseInt(n.box, 10);
+        const room = state.rooms[boxNum];
+        if (room && room.status === 'occupied') {
+          // Cộng món vào hóa đơn phòng (giống order tại quầy)
+          const incoming = n.items || [];
+          if (!room.orders) room.orders = [];
+          incoming.forEach(it => {
+            const existing = room.orders.find(o => o.id === it.id || o.code === it.code);
+            if (existing) {
+              existing.qty += (it.qty || 0);
+            } else {
+              room.orders.push({
+                id: it.id,
+                code: it.code || it.id,
+                name: it.name,
+                price: it.price,
+                qty: it.qty || 0
+              });
+            }
+          });
+          // Ghi MenuList (phần mới)
+          if (incoming.length) {
+            saveOrderItemsToSheet(boxNum, incoming, room.invoiceCode || n.invoiceCode || '');
+            deductStock(incoming);
+          }
+          saveState();
+          syncToSheet();
+          showToast('Đã thêm món vào BOX ' + boxNum);
+        } else {
+          showToast('Phòng không còn khách — chỉ đánh dấu đã nhận');
+        }
+      }
+      if (!SHEET_API) return;
+      try {
+        await fetch(SHEET_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'ackNotification', id })
+        });
+        pollNotifications();
+      } catch (e) { console.warn(e); }
+    }
+
+    function renderQRCodes() {
+      const grid = document.getElementById('qrGrid');
+      if (!grid) return;
+      // URL trang order trên cùng host
+      const base = location.href.replace(/index\.html.*$/, '').replace(/\/[^/]*$/, '/');
+      const orderBase = base + (base.endsWith('/') ? '' : '/') + 'order.html';
+      grid.innerHTML = '';
+      for (let i = 1; i <= 6; i++) {
+        const url = orderBase + '?box=' + i;
+        const qr = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' + encodeURIComponent(url);
+        grid.innerHTML += `<div class="qr-item"><img src="${qr}" alt="BOX ${i}"><div>BOX ${i}</div></div>`;
+      }
+    }
+
+    // Barcode scan in menu
+    document.addEventListener('keydown', function(e) {
+      const el = document.getElementById('menuBarcodeInput');
+      if (!el || document.getElementById('menuModal').classList.contains('active') === false) return;
+      if (e.target === el && e.key === 'Enter') {
+        e.preventDefault();
+        addByBarcode(el.value);
+        el.value = '';
+      }
+    });
+
+    (async function init() {
+      await loadConfig(); // trong đó gọi loadInventoryFromSheet
+      if (!MENU.length && SHEET_API) await loadInventoryFromSheet();
+      loadState();
+      renderBoxes();
+      renderBookings();
+      document.getElementById('cardInput').focus();
+      pollNotifications();
+      setInterval(pollNotifications, 5000);
+      setInterval(renderBookings, 15000);
+      // Tồn kho gần thời gian thực
+      setInterval(async () => {
+        await loadInventoryFromSheet();
+        // Nếu đang mở Menu thì cập nhật số "Còn"
+        const menuOpen = document.getElementById('menuModal') && document.getElementById('menuModal').classList.contains('active');
+        if (menuOpen) renderMenuList();
+      }, 10000);
+    })();
+  </script>
+</body>
+</html>
