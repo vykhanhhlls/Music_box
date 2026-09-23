@@ -151,7 +151,7 @@
         } else {
           ROOM_OK = false;
           document.getElementById('boxLabel').textContent = 'BOX ' + BOX + ' — chưa có khách';
-          document.getElementById('menuList').innerHTML = '<p style="color:#c00000;text-align:center;padding:24px;background:#fff;border-radius:10px;">Phòng đang trống.<br>Chỉ order khi phòng đã có khách (ô đỏ).</p>';
+          document.getElementById('menuList').innerHTML = '<p style="color:#c00000;text-align:center;padding:24px;background:#fff;border-radius:10px;">Phòng trên hệ thống đang đóng.<br>Chỉ có thể order khi phòng đã mở.<br>Xin quý khách vui lòng đến quầy để xác nhận mở phòng!</p>';
           document.getElementById('btnSend').disabled = true;
         }
       } catch (e) {
