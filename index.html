@@ -410,6 +410,34 @@
       margin-bottom: 10px;
     }
     .settings-row label { min-width: 180px; }
+        .staff-login-modal { max-width: 480px !important; width: 92%; }
+    .staff-login-field { display: flex; flex-direction: column; gap: 6px; margin: 12px 0; }
+    .staff-login-field label { font-weight: 600; min-width: auto !important; }
+    .staff-login-field select,
+    .staff-login-field input {
+      width: 100%; padding: 12px 14px; font-size: 16px;
+      border: 1px solid #ccc; border-radius: 8px;
+    }
+    .menu-modal {
+      max-width: 720px !important; width: 95%; max-height: 90vh;
+      display: flex; flex-direction: column; padding: 0 !important; overflow: hidden;
+    }
+    .menu-modal-top { flex-shrink: 0; padding: 20px 20px 10px; background: #fff; }
+    .menu-modal-top h3 { margin-bottom: 10px; }
+    .menu-modal-top #menuBarcodeInput {
+      width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 15px;
+    }
+    .menu-modal .menu-layout {
+      flex: 1; min-height: 0; overflow: hidden; padding: 8px 16px;
+      display: flex; gap: 16px; flex-wrap: nowrap; align-items: stretch;
+    }
+    .menu-modal .menu-list { flex: 1; min-width: 0; overflow-y: auto; }
+    .menu-modal .bill-panel { flex-shrink: 0; width: 220px; overflow-y: auto; }
+    .menu-modal-footer {
+      flex-shrink: 0; padding: 12px 20px 18px;
+      display: flex; justify-content: flex-end;
+      background: #fff; border-top: 1px solid #eee;
+    }
     .toast {
       position: fixed;
       bottom: 30px;
