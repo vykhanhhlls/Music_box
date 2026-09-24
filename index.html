@@ -618,26 +618,22 @@
   </div>
 
   <!-- Menu Modal -->
-  <div class="modal-overlay" id="menuModal">
-    <div class="modal" style="max-width: 700px;">
-      <h3>Menu - <span id="menuBoxTitle">BOX</span></h3>
-      <div style="margin-bottom:12px;">
-        <input type="text" id="menuBarcodeInput" placeholder="Quét mã vạch / nhập mã món rồi Enter"
-          style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; font-size:15px;"
-          autocomplete="off">
+    <div class="modal-overlay" id="menuModal">
+    <div class="modal menu-modal">
+      <div class="menu-modal-top">
+        <h3>Menu - <span id="menuBoxTitle">BOX</span></h3>
+        <input type="text" id="menuBarcodeInput" placeholder="Quét mã vạch / nhập mã món rồi Enter" autocomplete="off">
       </div>
       <div class="menu-layout">
         <div class="menu-list" id="menuList"></div>
         <div class="bill-panel">
           <h4>Hóa đơn tạm</h4>
           <div id="tempBill"></div>
-          <div class="bill-total">
-            Tổng: <span id="tempTotal">0</span> đ
-          </div>
+          <div class="bill-total">Tổng: <span id="tempTotal">0</span> đ</div>
           <button class="btn btn-success" style="width:100%; margin-top:12px;" id="btnSaveOrder">Lưu món</button>
         </div>
       </div>
-      <div class="modal-actions">
+      <div class="menu-modal-footer">
         <button class="btn btn-secondary" onclick="closeModal('menuModal')">Đóng</button>
       </div>
     </div>
@@ -732,16 +728,16 @@
   </div>
 
   <!-- Staff login -->
-  <div class="modal-overlay" id="staffModal">
-    <div class="modal" style="max-width:360px;">
+    <div class="modal-overlay" id="staffModal">
+    <div class="modal staff-login-modal">
       <h3>Đăng nhập nhân viên</h3>
-      <div class="settings-row">
+      <div class="staff-login-field">
         <label>Nhân viên</label>
-        <select id="staffSelect" style="flex:1;padding:8px;border:1px solid #ccc;border-radius:6px;"></select>
+        <select id="staffSelect"></select>
       </div>
-      <div class="settings-row">
+      <div class="staff-login-field">
         <label>Mã PIN</label>
-        <input type="password" id="staffPin" placeholder="PIN" maxlength="8" style="flex:1;padding:8px;border:1px solid #ccc;border-radius:6px;">
+        <input type="password" id="staffPin" placeholder="Nhập mã PIN" maxlength="8" autocomplete="off">
       </div>
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="closeModal('staffModal')">Hủy</button>
